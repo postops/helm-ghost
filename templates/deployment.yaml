@@ -1,0 +1,96 @@
+{{- if include "ghost.host" . -}}
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "ghost.fullname" . }}
+  labels:
+    app: {{ template "ghost.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "ghost.fullname" . }}
+      release: "{{ .Release.Name }}"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ template "ghost.fullname" . }}
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        release: "{{ .Release.Name }}"
+    spec:
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.image.pullSecrets }}
+        - name: {{ . }}
+      {{- end}}
+      {{- end }}
+      containers:
+      - name: {{ template "ghost.fullname" . }}
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+        env:
+        - name: url
+          value: {{ .Values.ghostUrl | quote }}
+        - name: mail__transport
+          value: {{ .Values.mail.transport | quote }}
+        - name: mail__from
+          value: {{ .Values.mail.from | quote }}
+        - name: mail__options__host
+          value: {{ .Values.mail.host | quote }}
+        - name: mail__options__port
+          value: {{ .Values.mail.port | quote }}
+        - name: mail__options__service
+          value: {{ .Values.mail.service | quote }}
+        - name: mail__options__auth__user
+          value: {{ .Values.mail.auth.user | quote }}
+        - name: mail__options__auth__pass
+          value: {{ .Values.mail.auth.pass | quote }}
+        - name: database__client
+          value: {{ .Values.database.client | quote }}
+        - name: database__connection__host
+          value: {{ .Values.database.connection.host | quote }}
+        - name: database__connection__port
+          value: {{ .Values.database.connection.port | quote }}
+        - name: database__connection__user
+          value: {{ .Values.database.connection.user | quote }}
+        - name: database__connection__password
+          value: {{ .Values.database.connection.password | quote }}
+        - name: database__connection__database
+          value: {{ .Values.database.connection.database | quote }}
+        - name: storage__active
+          value: "s3"
+        - name: storage__s3__accessKeyId
+          value: {{ .Values.storage.s3.accessKeyId | quote }}
+        - name: storage__s3__secretAccessKey
+          value: {{ .Values.storage.s3.secretAccessKey | quote }}
+        - name: storage__s3__bucket
+          value: {{ .Values.storage.s3.bucket }}
+        - name: storage__s3__region
+          value: {{ .Values.storage.s3.region }}
+        ports:
+        - name: http
+          containerPort: 2368
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+            httpHeaders:
+            - name: Host
+              value: {{ include "ghost.host" . | quote }}
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+            httpHeaders:
+            - name: Host
+              value: {{ include "ghost.host" . | quote }}
+          initialDelaySeconds: 30
+          timeoutSeconds: 3
+          periodSeconds: 5
+{{- end -}}

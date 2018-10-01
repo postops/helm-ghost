@@ -1,0 +1,58 @@
+## Postops Ghost image version
+## ref: https://hub.docker.com/r/postops/ghost/tags
+##
+image:
+  registry: docker.io
+  repository: postops/ghost
+  tag: 2.1
+  pullPolicy: IfNotPresent
+
+ghostPath: /
+
+ghostUrl: ""
+
+ghostPort: 80
+
+ghostLoadBalancerIP: ""
+
+
+mail:
+    transport: "smtp"
+    from: "no-reply@barbell.fit"
+    options: {}
+
+database:
+    client: "mysql"
+    connection: {}
+
+storage:
+    s3: {}
+
+## Kubernetes configuration
+## For minikube, set this to NodePort, elsewhere use LoadBalancer
+##
+serviceType: LoadBalancer
+
+## Configure resource requests and limits
+## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+##
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 300m
+
+## Configure ingress resource
+## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+##
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  path: /
+  hosts:
+    - ghost.local
+  tls: []
+  #  - secretName: ghost-tls
+  #    hosts:
+  #      - ghost.local
